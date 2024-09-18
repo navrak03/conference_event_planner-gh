@@ -3,7 +3,7 @@ import "./ConferenceEvent.css";
 import TotalCost from "./TotalCost";
 import { useSelector, useDispatch } from "react-redux";
 import { incrementQuantity, decrementQuantity } from "./venueSlice";
-import { decrementAvQuantity, incrementAvQuantity } from "./avSlice";
+import { incrementAvQuantity, decrementAvQuantity } from "./avSlice";
 import { toggleMealSelection } from "./mealsSlice";
 
 const ConferenceEvent = () => {
@@ -11,6 +11,7 @@ const ConferenceEvent = () => {
     const [numberOfPeople, setNumberOfPeople] = useState(1);
     const venueItems = useSelector((state) => state.venue);
     const avItems = useSelector((state) => state.av);
+    const mealsItems = useSelector((state) => state.meals);
     const dispatch = useDispatch();
     const remainingAuditoriumQuantity = 3 - venueItems.find(item => item.name === "Auditorium Hall (Capacity:200)").quantity;
 
@@ -41,10 +42,10 @@ const ConferenceEvent = () => {
     };
 
     const handleMealSelection = (index) => {
-       const item = mealsItem[index];
+       const item = mealsItems[index];
        if(item.selected && item.type === "mealForPeople"){
-            const numberOfPeople = item.selected ? numberOfPeople :0;
-            dispatch(toggleMealSelection(index, numberOfPeople));
+            const newNumberOfPeople = item.selected ? numberOfPeople :0;
+            dispatch(toggleMealSelection(index, newNumberOfPeople));
        } else {
         dispatch(toggleMealSelection(index));
        }
@@ -95,16 +96,21 @@ const ConferenceEvent = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {items.map((item, index) => {
-                            <tr key = {index}>
+                        {items.map((item, index) => (
+                            <tr key={index}>
                                 <td>{item.name}</td>
-                                <td>item.cost</td>
-                                <td>{item.type ==="meals" || item.numberOfPeople ? `For ${numberOfPeople} people`: item.quantity}
+                                <td>${item.cost}</td>
+                                <td>
+                                    {item.type === "meals" || item.numberOfPeople
+                                    ? ` For ${numberOfPeople} people`
+                                    : item.quantity}
                                 </td>
-                                <td>{item.type==="meals" || item.numberOfPeople ? `${item.cost*numberOfPeople}` : `${item.cost*item.quantity}`}
+                                <td>{item.type === "meals" || item.numberOfPeople
+                                    ? `${item.cost * numberOfPeople}`
+                                    : `${item.cost * item.quantity}`}
                                 </td>
                             </tr>
-                        })}
+                        ))}
                     </tbody>
                 </table>
             </div>
@@ -118,15 +124,16 @@ const ConferenceEvent = () => {
           });
         } else if (section ==="av"){
             avItems.foreach((item) => {
-                totalCost += item.cost * itemquantity;
+                totalCost += item.cost * item.quantity;
             })
         } else if (section === "meals"){
-            mealItems.foreach((item)=>{
+            mealsItems.foreach((item)=>{
                 totalCost += item.cost * numberOfPeople;
             })
         }
         return totalCost;
       };
+
     const venueTotalCost = calculateTotalCost("venue");
     const avTotalCost = calculateTotalCost("av");
     const mealsTotalCost = calculateTotalCost("meals");
@@ -246,7 +253,7 @@ const ConferenceEvent = () => {
                                             <div className="addons_btn">
                                                 <button className="btn_warning" onClick={() => handleDecrementAvQuantity(index)}> &ndash </button>
                                                 <span className="quantity-value">{item.quantity}</span>
-                                                <button className="btn_success" onClick={() => handleIncrementAvQuantity(index)}> &#43 </button>
+                                                <button className="btn-success" onClick={() => handleIncrementAvQuantity(index)}> &#43 </button>
                                             </div>
                                         </div>
                                     ))}
@@ -275,23 +282,24 @@ const ConferenceEvent = () => {
                                     {mealsItems.map((item, index) => (
                                         <div className="meal_item" key={index} style={{ padding: 15 }}>
                                             <div className="inner">
-                                                <input type="checkbox" id = {`meal_$(index`}
-                                                checked={item.selected}
-                                                onChange={()=> handleMealSelection(index)} />
-                                                <label htmlFor ={`meal_$(index)`} >{item.name}</label>
+                                                <input type="checkbox" id = { `meal_${index}` }
+                                                checked={ item.selected }
+                                                onChange={() => handleMealSelection(index)} />
+                                                <label htmlFor = {`meal_${index}`} > {item.name}</label>
                                             </div>
-                                            <div className="meal_cost">{item.cost}</div>
+                                            <div className="meal_cost">${item.cost}</div>
                                         </div>
                                     ))}
                                 </div>
-                                <div className="total_cost">Total Cost: {mealsTotalCost}</div>
+                                <div className="total_cost">Total Cost: ${mealsTotalCost}</div>
 
 
                             </div>
                         </div>
                     ) : (
                         <div className="total_amount_detail">
-                            <TotalCost totalCosts={totalCosts} handleClick={handleToggleItems} ItemsDisplay={() => <ItemsDisplay items={items} />} />
+                            {/*<TotalCost totalCosts={totalCosts} handleClick={handleToggleItems} ItemsDisplay={() => <ItemsDisplay items={items} />} />*/}
+                            <TotalCost totalCosts={ totalCosts } ItemsDisplay={() => <ItemsDisplay items={ items } />} />
                         </div>
                     )
                 }
